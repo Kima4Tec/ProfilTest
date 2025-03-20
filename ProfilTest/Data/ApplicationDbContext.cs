@@ -12,5 +12,6 @@ namespace ProfilTest.Data
 
         public DbSet<Profiles> Profiles { get; set; }
         public DbSet<Emails> Emails { get; set; }
+        public DbSet<Users> User { get; set; }
     }
 }

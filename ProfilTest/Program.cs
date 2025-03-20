@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using ProfilTest.Data;
 using ProfilTest.Mappings;
 using AutoMapper;
+using ProfilTest.Repository;
+using ProfilTest.Services;
 
 namespace ProfilTest
 {
@@ -30,6 +32,8 @@ namespace ProfilTest
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<AuthService>();
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
@@ -43,6 +47,7 @@ namespace ProfilTest
             app.UseCors("AllowLocalhost");
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
