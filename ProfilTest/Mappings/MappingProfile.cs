@@ -9,6 +9,7 @@ namespace ProfilTest.Mappings
         public MappingProfile()
         {
             CreateMap<Profiles, ProfilDto>().ReverseMap();
+            CreateMap<Emails, EmailDto>().ReverseMap();
         }
     }
 }

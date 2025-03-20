@@ -2,52 +2,62 @@
 using Microsoft.EntityFrameworkCore;
 using ProfilTest.Data;
 using ProfilTest.Models;
+using ProfilTest.DTOs;
+using AutoMapper;
 
-namespace Profiltest.Controllers
+namespace ProfilTest.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EmailsController : ControllerBase
+    public class EmailController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public EmailsController(ApplicationDbContext context)
+        public EmailController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        // GET: api/Emails
+        // GET: api/Email
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Emails>>> GetEmail()
+        public async Task<ActionResult<IEnumerable<EmailDto>>> GetEmails()
         {
-            return await _context.Emails.ToListAsync();
+            var emails = await _context.Emails.ToListAsync();
+            return Ok(_mapper.Map<List<EmailDto>>(emails));
         }
 
-        // GET: api/Emails/5
+        // GET: api/Email/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Emails>> GetEmails(int id)
+        public async Task<ActionResult<EmailDto>> GetEmail(int id)
         {
-            var emails = await _context.Emails.FindAsync(id);
+            var email = await _context.Emails.FindAsync(id);
 
-            if (emails == null)
+            if (email == null)
             {
                 return NotFound();
             }
 
-            return emails;
+            return Ok(_mapper.Map<EmailDto>(email));
         }
 
-        // PUT: api/Emails/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/Email/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEmails(int id, Emails emails)
+        public async Task<IActionResult> PutEmail(int id, [FromBody] EmailDto emailDto)
         {
-            if (id != emails.Id)
+            if (id != emailDto.Id)
             {
-                return BadRequest();
+                return BadRequest("Email-ID matcher ikke.");
             }
 
-            _context.Entry(emails).State = EntityState.Modified;
+            var email = await _context.Emails.FindAsync(id);
+            if (email == null)
+            {
+                return NotFound("Email ikke fundet");
+            }
+
+            _mapper.Map(emailDto, email);
 
             try
             {
@@ -55,7 +65,7 @@ namespace Profiltest.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!EmailsExists(id))
+                if (!EmailExists(id))
                 {
                     return NotFound();
                 }
@@ -65,37 +75,43 @@ namespace Profiltest.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(_mapper.Map<EmailDto>(email));
         }
 
-        // POST: api/Emails
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/Email
         [HttpPost]
-        public async Task<ActionResult<Emails>> PostEmails(Emails emails)
+        public async Task<ActionResult<Emails>> PostEmail([FromBody] EmailDto emailDto)
         {
-            _context.Emails.Add(emails);
+            if (emailDto == null)
+            {
+                return BadRequest("Ugyldig emaildata");
+            }
+
+            var email = _mapper.Map<Emails>(emailDto);
+
+            _context.Emails.Add(email);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetEmails", new { id = emails.Id }, emails);
+            return CreatedAtAction(nameof(GetEmail), new { id = email.Id }, _mapper.Map<EmailDto>(email));
         }
 
-        // DELETE: api/Emails/5
+        // DELETE: api/Email/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEmails(int id)
+        public async Task<IActionResult> DeleteEmail(int id)
         {
-            var emails = await _context.Emails.FindAsync(id);
-            if (emails == null)
+            var email = await _context.Emails.FindAsync(id);
+            if (email == null)
             {
                 return NotFound();
             }
 
-            _context.Emails.Remove(emails);
+            _context.Emails.Remove(email);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool EmailsExists(int id)
+        private bool EmailExists(int id)
         {
             return _context.Emails.Any(e => e.Id == id);
         }
